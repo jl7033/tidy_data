@@ -33,12 +33,89 @@ pulse_tidy_df =
   pivot_longer(
     cols = bdi_score_bl:bdi_score_12m,
     names_to = "visit",
-    values_to = "bdi_score"
-  )
+    values_to = "bdi_score", #creates new column
+    names_prefix = "bdi_score_" #removes prefixes
+  ) %>%
+  mutate(
+    visit = replace(visit, visit == "bl", "00m") #replace "bl" with something easier to read
+  ) %>%
+  select(id, visit, everything()) #reorganizes the columns
 
 head(pulse_tidy_df)
 
 ```
 
+## One More Example: Practice with Litters
 
+```{r}
+
+litters_df =
+  read_csv("./data/FAS_litters.csv", na = c("NA", ".", "")) %>%
+  janitor::clean_names() %>%
+  pivot_longer(
+    cols = gd0_weight:gd18_weight,
+    names_to = "gd_time",
+    values_to = "gestational_weight"
+  ) %>% 
+  mutate(
+    gd_time = replace(gd_time, gd_time == "gd0_weight", 0),
+    gd_time = replace(gd_time, gd_time == "gd18_weight", 18)
+  )
+
+head(litters_df)
+
+```
+### Trying the case_match() function within mutate() -- same result
+
+```{r}
+
+litters_df =
+  read_csv("./data/FAS_litters.csv", na = c("NA", ".", "")) %>%
+  janitor::clean_names() %>%
+  pivot_longer(
+    cols = gd0_weight:gd18_weight,
+    names_to = "gd_time",
+    values_to = "gd_weight"
+  ) %>% 
+  mutate(
+    gd_time = case_match(
+      gd_time,
+      "gd0_weight" ~ 0,
+      "gd18_weight" ~ 18
+    )
+  )
+
+head(litters_df)
+
+```
+## Using Pivot Wider
+
+```{r}
+
+analysis_df =
+  tibble(
+    group = c("treatment", "treatment", "control", "control"),
+    time = c("pre", "post", "pre", "post"),
+    mean = c(4, 10, 4.2, 5)
+  )
+
+analysis_df
+
+```
+
+### Pivot wider for human readability
+
+```{r}
+
+analysis_df_wide =
+  analysis_df %>%
+  pivot_wider(
+    names_from = time,
+    values_from = mean
+  )
+
+analysis_df_wide
+  
+
+```
 
